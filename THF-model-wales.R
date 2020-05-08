@@ -6,6 +6,10 @@
 #Use a backup of to import in, for all postcodes in Wales
 
 #Why this data and why this research question
+#Does being closer to medical resources mean you have better health and thus less
+#likely to become a patient, or is the distance an impediment?
+#Unless in extreme cases, people are usually able to reach care in this country
+
 #Set out the research question: Does... ?
 #Explain data you will use
 #Explain the difficulties and how you will solve them brieflt
@@ -143,6 +147,11 @@ latlong="+init=epsg:4326"
 USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.names=T) %>% 
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 
+#How many people inpatient or outpatient in the year after data collection?
+#Summarize into a graph
+#Look at some univariate statistics (overlaid histograms) for age
+#Bubble chart or frequency table for LT_health and urban/rural (this sets the scene)
+
 #We would like to describe the likelihood of being being an inpatient our outpatient
 #Using a set of standard socio-economic predictors, but also location-based variables
 #That we obtain using web-scraping and GIS analysis
@@ -260,7 +269,7 @@ OSM_points_shp@data <- select(OSM_points_shp@data,name,amenity) %>%
 
 healthcare_resources_shp <- bind(OSM_points_shp,gp_surgeries_shp)
 
-rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries) #Clean up environment
+rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_full,Wales_postcodes_small) #Clean up environment
 
 #################################################################
 ################### VISUALIZE GEOSPATIAL DATA ###################
@@ -316,17 +325,27 @@ ggplot(survey.predictors.wales, aes(dist.to.point, fill = cut(dist.to.point, 100
 ################### MERGE INTO THE SURVEY ###################
 #############################################################
 
-#Very simple
+USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 
 #############################################################
 ################### SIMPLE REGRESSION MODEL #################
 #############################################################
 
-#Maybe just one model
-#probit patient_nexttyear age male_fe leq_hhincome urban
-#probit patient_nexttyear age male_fe leq_hhincome LT_health urban
-#probit patient_nexttyear age male_fe leq_hhincome ghealth urban
-#probit patient_nexttyear age male_fe leq_hhincome ghealth distance
+summary(USoc)
+
+Model_1 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health,data=USoc, family=binomial)
+summary(Model_1)
+
+Model_2 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
+summary(Model_2)
+
+Model_3 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
+summary(Model_3)
+
+#In this simple model, no differences according to gender
+#Older people, holding health constant, do have a higher likelihood of becoming a patient
+#But living in an urban area has no impact in this simple model of becoming a patient
+#Neither does the distance to nearest hospital/GP surgery
 
 #describe in terms of margins in terms of age, having a LT illness
 #replace urban with distance to GP/hospital
