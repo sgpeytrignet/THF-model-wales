@@ -337,6 +337,7 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 Model_1 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health,data=USoc, family=binomial)
 summary(Model_1)
 
+#Is there a nice way to present regression outputs in R?
 #In this simple model, no differences according to gender
 #Older people, holding health constant, do have a higher likelihood of
 #becoming a patient (significant if you combine outpatient/inpatient) [EXPRESS MARGIN?]
@@ -372,3 +373,12 @@ ROCRperf_model3 = performance(ROCRpred_model3, "tpr", "fpr")
 plot(ROCRperf_model3, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
 
 #Not a great prediction model: show AUC and ROC curve
+
+#############################################################
+################### SUMMARISE THE POINTS BELOW ##############
+#############################################################
+
+# • A brief explanation of what problem you are trying to solve and the data you have used
+# • The approach you have taken to solving the problem
+# • What you learned in this project from an analysis and coding perspective
+# • Reflections on what you would do differently in another project
