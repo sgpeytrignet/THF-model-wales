@@ -358,16 +358,17 @@ summary(Model_3)
 ################### SIMPLE PREDICTIVE ANALYTICS #############
 #############################################################
 
-predict_model1 = predict(Model_1, type="response")
-
-length(predict_model1)
-
-predict_model2 = predict(Model_2, type="response")
 predict_model3 = predict(Model_3, type="response")
 
-roc_model1 <- roc(diagnostic_data$malignant,predict_model1)
-roc_model2 <- roc(diagnostic_data$malignant,predict_model2)
-roc_model3 <- roc(diagnostic_data$malignant,predict_model3)
+roc_model3 <- roc(USoc$inpatient_nexttyear,predict_model3)
 
 #ROC curve for a model
 #maybe plot/curve in terms of age and distance to GP/hospital like in code already done
+
+ROCRpred_model3 = prediction(predict_model3, USoc$inpatient_nexttyear)
+
+ROCRperf_model3 = performance(ROCRpred_model3, "tpr", "fpr")
+
+plot(ROCRperf_model3, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
+
+#Not a great prediction model: show AUC and ROC curve
