@@ -58,7 +58,7 @@ desc hosp
 numlabel g_hosp, add mask("[#] ")
 tab hosp, miss
 cap drop inpatient_lastyear
-gen inpatient_lastyear=cond(hosp==1,1,cond(hl2hop==2,0,.))
+gen inpatient_lastyear=cond(hosp==1,1,cond(hosp==2,0,.))
 tab hosp inpatient_lastyear, miss
 
 *Inpatient or outpatient
