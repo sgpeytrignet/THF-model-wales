@@ -6,6 +6,15 @@
 #Use a backup of to import in, for all postcodes in Wales
 
 #Why this data and why this research question
+#Hype up the data, say that people don't use it for prediction ofter, but it's
+#possible to do so by manipulating the data structure: what happens to the person in the future
+
+#I want to pool together survey data, web-scraped information and GIS analysis
+#to explore this question
+
+#I restrict to Wales because of recent work i've been doing for Welsh gvt so it's in my mind
+#And also because the GIS functions are sometimes intensive so it's good to have smaller data
+
 #Does being closer to medical resources mean you have better health and thus less
 #likely to become a patient, or is the distance an impediment?
 #Unless in extreme cases, people are usually able to reach care in this country
@@ -25,7 +34,7 @@ if (!require("pacman")) install.packages("pacman")
 
 pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,readxl,gmodels,Rmisc,DescTools,data.table,
                Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,
-               ContourFunctions,ROCR,pROC)
+               ContourFunctions,ROCR,pROC,margins)
 
 rm(list = ls()) ##### Clean up the global environment
 
@@ -382,3 +391,6 @@ plot(ROCRperf_model3, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 # • The approach you have taken to solving the problem
 # • What you learned in this project from an analysis and coding perspective
 # • Reflections on what you would do differently in another project
+
+#Use real postcodes (otherwise just info from urban/rural plus noise)
+#Use whole UK, allow 
