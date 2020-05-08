@@ -24,7 +24,8 @@
 if (!require("pacman")) install.packages("pacman")
 
 pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,readxl,gmodels,Rmisc,DescTools,data.table,
-               Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply)
+               Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,
+               ContourFunctions,ROCR,pROC)
 
 rm(list = ls()) ##### Clean up the global environment
 
@@ -147,8 +148,10 @@ latlong="+init=epsg:4326"
 USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.names=T) %>% 
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 
+summary(USoc)
+
 #How many people inpatient or outpatient in the year after data collection?
-#Summarize into a graph
+#Summarize into graphs
 #Look at some univariate statistics (overlaid histograms) for age
 #Bubble chart or frequency table for LT_health and urban/rural (this sets the scene)
 
@@ -331,28 +334,40 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 ################### SIMPLE REGRESSION MODEL #################
 #############################################################
 
-summary(USoc)
-
-Model_1 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health,data=USoc, family=binomial)
+Model_1 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health,data=USoc, family=binomial)
 summary(Model_1)
 
-Model_2 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
+#In this simple model, no differences according to gender
+#Older people, holding health constant, do have a higher likelihood of
+#becoming a patient (significant if you combine outpatient/inpatient) [EXPRESS MARGIN?]
+#Income does not have an impact in this model
+#Not surprisingly, having a LT health condition is a strong predictor [EXPRESS MARGIN?]
+
+Model_2 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
 summary(Model_2)
 
-Model_3 <-  glm(patient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
+#Living in a rural area does not make you less likely to become an inpatient
+
+Model_3 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 summary(Model_3)
 
-#In this simple model, no differences according to gender
-#Older people, holding health constant, do have a higher likelihood of becoming a patient
-#But living in an urban area has no impact in this simple model of becoming a patient
-#Neither does the distance to nearest hospital/GP surgery
-
-#describe in terms of margins in terms of age, having a LT illness
-#replace urban with distance to GP/hospital
+#As an extension, neither does the distance to a GP/hospital
+#(although suggests a longer distance means you are less likely health being held constant)
 
 #############################################################
 ################### SIMPLE PREDICTIVE ANALYTICS #############
 #############################################################
+
+predict_model1 = predict(Model_1, type="response")
+
+length(predict_model1)
+
+predict_model2 = predict(Model_2, type="response")
+predict_model3 = predict(Model_3, type="response")
+
+roc_model1 <- roc(diagnostic_data$malignant,predict_model1)
+roc_model2 <- roc(diagnostic_data$malignant,predict_model2)
+roc_model3 <- roc(diagnostic_data$malignant,predict_model3)
 
 #ROC curve for a model
 #maybe plot/curve in terms of age and distance to GP/hospital like in code already done
