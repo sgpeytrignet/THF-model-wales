@@ -343,6 +343,8 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 ################### SIMPLE REGRESSION MODEL #################
 #############################################################
 
+summary(USoc)
+
 Model_1 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health,data=USoc, family=binomial)
 summary(Model_1)
 
@@ -360,6 +362,8 @@ summary(Model_2)
 
 Model_3 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 summary(Model_3)
+
+cplot(Model_3, "age")
 
 #As an extension, neither does the distance to a GP/hospital
 #(although suggests a longer distance means you are less likely health being held constant)
