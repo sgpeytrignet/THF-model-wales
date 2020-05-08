@@ -2,22 +2,23 @@
 ################### DEVELOPMENT IDEAS ####################
 ##########################################################
 
-#On mac, can we make look run on multi-core?
-#Use a backup of to import in, for all postcodes in Wales
-
 #Why this data and why this research question
-#Hype up the data, say that people don't use it for prediction ofter, but it's
-#possible to do so by manipulating the data structure: what happens to the person in the future
 
+#Recently been working on research for welsh government, on benefits of a transport scheme
+#Decided to draw on some of my knowledge from that geodata, but apply to the health area
+#Looking at what person-level data i had available, decided to look at...
+
+#Does being closer to medical resources mean you have better health and thus less
+#likely to become a patient, or is the distance an impediment?
+#Unless in extreme cases, people are usually able to reach care in this country
+
+#Hype up the data, say that people it's reallt good but people don't use it for prediction ofter, but it's
+#possible to do so by manipulating the data structure: what happens to the person in the future
 #I want to pool together survey data, web-scraped information and GIS analysis
 #to explore this question
 
 #I restrict to Wales because of recent work i've been doing for Welsh gvt so it's in my mind
 #And also because the GIS functions are sometimes intensive so it's good to have smaller data
-
-#Does being closer to medical resources mean you have better health and thus less
-#likely to become a patient, or is the distance an impediment?
-#Unless in extreme cases, people are usually able to reach care in this country
 
 #Set out the research question: Does... ?
 #Explain data you will use
@@ -359,14 +360,17 @@ Model_2 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+urban,d
 summary(Model_2)
 
 #Living in a rural area does not make you less likely to become an inpatient
+#As an extension, neither does the distance to a GP/hospital
+#(although suggests a longer distance means you are less likely health being held constant)
 
 Model_3 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 summary(Model_3)
 
+#Age: show plot
 cplot(Model_3, "age")
 
-#As an extension, neither does the distance to a GP/hospital
-#(although suggests a longer distance means you are less likely health being held constant)
+#LT health problem: merge in LT_health, and compare two means
+predict_model3 = predict(Model_3, type="response")
 
 #############################################################
 ################### SIMPLE PREDICTIVE ANALYTICS #############
