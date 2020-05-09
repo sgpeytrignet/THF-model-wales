@@ -291,6 +291,8 @@ rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_full,Wales_postc
 palher <- colorFactor(palette=c("#e7298a","#e6ab02"),
                       levels = c("GP","hospital"))
 
+#Add number of households on top of this to highlight areas of need
+
 leaflet(healthcare_resources_shp,options = leafletOptions(zoomControl = FALSE)) %>%
   addProviderTiles(providers$Stamen.Terrain) %>%
   addCircleMarkers(data=healthcare_resources_shp,fillColor = ~palher(Type),radius=5,
@@ -351,6 +353,7 @@ summary(Model_1)
 
 #Is there a nice way to present regression outputs in R?
 #In this simple model, no differences according to gender
+#Is there an effect for age if we don't adjust for health?
 #Older people, holding health constant, do have a higher likelihood of
 #becoming a patient (significant if you combine outpatient/inpatient) [EXPRESS MARGIN?]
 #Income does not have an impact in this model
