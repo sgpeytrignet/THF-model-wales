@@ -11,35 +11,36 @@
 # WHY?:
 # Up to 10 million people in rural Britain live in 'healthcare deserts' (Royal College of Nursing - 2019).
 # Movements towards a digital health service would exacerbate accessibility issues.
-# Is this already reflected in patterns of healthcare use? At equal health levels, are people in more remote
+# Is this already reflected in patterns of healthcare use? At equal levels of health, are people in more remote
 # areas admitted to hospital less frequently?
 # I have restricted analysis to Wales because, through recent for the Welsh Government for a transport
 # scheme, I have already processed data on service accessibility and I am familiar with the
 # survey data available for that region.
 
 # DATA:
-# Survey data from waves 8 and 9 of Understanding Society - the largest nationally representative
-# longitudinal survey in the UK (ESRC). 
-# Data on household location imputed using urban/rural indicator and directory of postcodes from the ONS
-# Locations of GP surgeries in the UK - extracted from NHS Digital.
-# Locations of hospitals in the UK - web-scraped from Open Street Maps.
+# Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
+# longitudinal survey in the UK (University of Essex). 
+# Data on household location imputed using survey urban/rural indicator and ONS directory of postcodes
+# Locations of GP surgeries in the UK - extracted from NHS Digital database.
+# Locations of hospitals in the UK - web-scraped from Open Street Maps using Overpass Turbo.
 
 # • The approach you have taken to solving the problem
 
 # METHODOLOGY:
-# Pool together survey data and geodata harvested from online resources and transformed into predictors.
+# Pool together survey data and external variables, built using geodata harvested from online resources.
 # Survey data: Used longitudinal element of Understanding Society to create new outcome in wave 8:
-# 'will require inpatient/outpatient  care in the next 12 months'.
+# 'will require inpatient/outpatient  care in the next 12 months'. End up with a cross-section.
 # Data imputation: household location is not available on the public version of the survey dataset.
-# For the sake of this exercise, I resort to second best solution: impute postcodes at random (with replacement)
-# based on whether survey repondents live in a rural or urba area (e.g. if you live in urban area in Wales,
-# you may get assigned a Cardiff postcode).
+# For the sake of this exercise, I resort to second-best solution: impute postcodes at random (with replacement)
+# based on whether survey repondents live in a rural or urban area (e.g. if you live in urban area in Wales,
+# you may get assigned a Cardiff or Swansea postcode).
 # GIS analysis (geographic information system): For each postcode, I have prepared a function that
-# summarizes: how close your nearest GP surgery or hospital is, and how many are within a distance buffer
-# from where you live. This new predictor is then merged back into the survey responses.
+# summarizes: how close your nearest GP surgery/hospital is, and how many can be found within a distance buffer
+# from where you live. This new predictor is then merged back into the survey responses based on the imputed
+# postcode.
 # I use logistic regressions to assess the impact of several factors on the likelihood of accessing
-# inpatient care in the next 12 months.
-# I assess the marginal impact of those factors on that likelihood, and assess the accuracy of thsoe
+# in-patient care in the next 12 months.
+# I assess the marginal impact of those factors on the likelihood, and assess the performance of thsoe
 # prediction models with ROC curves.
 
 ##############################################
@@ -389,7 +390,8 @@ plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 # plus noise). This would also allow me to see whether I have the most remote, potentially vulnerable
 # households in my dataset.
 # Look at non-urgent/outpatient care where distance may be more of a factor in deciding to see a doctor.
-# Journey times by car/PT rather than as-the-crow-flies distance
+# Journey times by car/PT rather than as-the-crow-flies distance.
+# Prediction with small models is prone to over-fitting, so I would use methods for cross-validation.
 # Try a different model for whole UK and allow interactions to assess different impacts according to region.
-# Use R Notebook to present analysis
+# Use R Notebook to present analysis.
 
