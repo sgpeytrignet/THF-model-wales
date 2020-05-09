@@ -5,7 +5,7 @@
 # • A brief explanation of what problem you are trying to solve and the data you have used
 
 # RESEARCH QUESTION:
-# What is the relationship between the accessibility of medical services (GP surgeries and hospitals)
+# What is the relationship between the accessibility of medical services (distance to GP surgeries and hospitals)
 # and the likelihood of their use? Focus on inpatient care among a general population cohort in Wales in 2017.
 
 # WHY?:
