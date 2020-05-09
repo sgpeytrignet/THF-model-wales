@@ -1,9 +1,11 @@
-##########################################################
-################### DEVELOPMENT IDEAS ####################
-##########################################################
+#####################################################
+################### INTRODUCTION ####################
+#####################################################
+
+# • A brief explanation of what problem you are trying to solve and the data you have used
+# • The approach you have taken to solving the problem
 
 #Why this data and why this research question
-
 #Recently been working on research for welsh government, on benefits of a transport scheme
 #Decided to draw on some of my knowledge from that geodata, but apply to the health area
 #Looking at what person-level data i had available, decided to look at...
@@ -134,7 +136,7 @@ number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.sp
 ######################################################
 
 setwd(str_replace_all(path.expand("~"), "Documents", ""))
-setwd("Documents/GitHub/THF-model-wales/")
+setwd("Documents/GitHub/THF-model-wales/Files/")
 
 #####################################################################
 ################### PROJECTIONS FOR GIS ANALYSIS ####################
@@ -398,8 +400,6 @@ plot(ROCRperf_model3, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 ################### SUMMARISE THE POINTS BELOW ##############
 #############################################################
 
-# • A brief explanation of what problem you are trying to solve and the data you have used
-# • The approach you have taken to solving the problem
 # • What you learned in this project from an analysis and coding perspective
 # • Reflections on what you would do differently in another project
 
