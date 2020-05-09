@@ -19,7 +19,7 @@
 
 # DATA:
 # Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
-# longitudinal survey in the UK (University of Essex). 
+# longitudinal survey in the UK (Funded by UK government, run from University of Essex). 
 # Data on household location imputed using survey urban/rural indicator and ONS directory of postcodes
 # Locations of GP surgeries in the UK - extracted from NHS Digital database.
 # Locations of hospitals in the UK - web-scraped from Open Street Maps using Overpass Turbo.
@@ -204,19 +204,18 @@ USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*1
 #####################################################################
 
 ################## Import directory of postcodes in the UK, Wales
-Wales_postcodes_full <- fread("Welsh postcodes.csv",header=TRUE, sep=",", check.names=T)
 Wales_postcodes_small <- fread("Welsh postcodes small.csv",header=TRUE, sep=",", check.names=T)
 
 ################## Sample urban postcodes for USoc dataset (with replacement)
 USoc_urban <- filter(USoc,urban==1) %>% select(.,pidp)
 urban_postcodes <- filter(Wales_postcodes_small,urban==1)
-samples_postcodes_urban_idx <- sample(nrow(urban_postcodes),nrow(USoc_urban), replace = TRUE, prob = NULL)
+samples_postcodes_urban_idx <- sample(1:nrow(urban_postcodes),nrow(USoc_urban), replace = TRUE, prob = NULL)
 USoc_imputed_pcode_urban <- urban_postcodes[samples_postcodes_urban_idx,] %>% select(.,pcode) %>% cbind.data.frame(.,USoc_urban)
 
 ################## Sample rural postcodes for USoc dataset (with replacement)
 USoc_rural <- filter(USoc,urban==0) %>% select(.,pidp)
 rural_postcodes <- filter(Wales_postcodes_small,urban==0)
-samples_postcodes_rural_idx <- sample(nrow(rural_postcodes),nrow(USoc_rural), replace = TRUE, prob = NULL)
+samples_postcodes_rural_idx <- sample(1:nrow(rural_postcodes),nrow(USoc_rural), replace = TRUE, prob = NULL)
 USoc_imputed_pcode_rural <- urban_postcodes[samples_postcodes_rural_idx,] %>% select(.,pcode) %>% cbind.data.frame(.,USoc_rural)
 
 ################## Dataset of imputed postcodes
@@ -265,7 +264,7 @@ OSM_points_shp@data <- select(OSM_points_shp@data,name,amenity) %>%
 ################## Merge geospatial data from NHS and OpenStreetMaps a single shapefile
 
 healthcare_resources_shp <- raster::bind(OSM_points_shp,gp_surgeries_shp)
-rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_full,Wales_postcodes_small) #Clean up environment
+rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_small) #Clean up environment
 
 ################## Visualize the web-scraped geodata
 ################## Note areas in the middle with much lower provison (relative to population density)
