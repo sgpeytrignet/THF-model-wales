@@ -1,4 +1,4 @@
-pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity,LT_health,male_fe,outpatient_lastyear,inpatient_lastyear,patient_lastyear,urban,patient_nexttyear,inpatient_nexttyear,outpatient_nexttyear
+pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity,LT_health,male,outpatient_lastyear,inpatient_lastyear,patient_lastyear,urban,patient_nexttyear,inpatient_nexttyear,outpatient_nexttyear
 22445,8,[7] london,8.0032625,31,961,1,[3] Good,0,[1] White,0,0,1,1,1,1,1,0,1
 29925,8,[7] london,7.5324464,39,1521,1,[3] Good,1,[1] White,1,0,1,0,1,1,1,0,1
 76165,8,[5] west midlands,8.312871,33,1089,1,[3] Good,0,[1] White,0,0,1,0,1,1,1,1,1
@@ -5218,7 +5218,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 272396447,8,[4] east midlands,7.2469454,58,3364,0,[1] Poor,0,[1] White,1,0,1,0,1,1,1,1,1
 272396451,8,[4] east midlands,7.2469454,16,256,1,[4] Very good,0,[1] White,1,0,1,0,1,1,0,0,0
 272397127,8,[4] east midlands,8.3673792,56,3136,1,[3] Good,1,[1] White,0,0,1,0,1,1,1,0,1
-272397807,8,[4] east midlands,.35065687,29,841,1,[3] Good,0,[1] White,1,0,1,0,1,1,1,0,1
+272397807,8,[4] east midlands,0.35065687,29,841,1,[3] Good,0,[1] White,1,0,1,0,1,1,1,0,1
 272399179,8,[4] east midlands,8.6012383,19,361,1,[4] Very good,0,[5] Other,0,1,0,0,0,1,0,0,0
 272400527,8,[4] east midlands,7.995048,65,4225,1,[4] Very good,1,[1] White,1,0,0,0,0,1,0,0,0
 272400531,8,[4] east midlands,7.995048,68,4624,1,[3] Good,1,[1] White,0,1,0,0,0,1,1,0,1
@@ -8777,7 +8777,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 409287927,8,[11] scotland,6.2893071,55,3025,1,[3] Good,0,[1] White,1,1,0,0,0,0,0,1,0
 409287931,8,[11] scotland,6.2893071,60,3600,1,[3] Good,0,[1] White,0,0,0,0,0,0,0,0,0
 409289287,8,[11] scotland,7.4965582,39,1521,1,[4] Very good,1,[1] White,1,1,1,1,1,1,1,0,1
-409294047,8,[11] scotland,.73236793,80,6400,0,[2] Fair,0,[1] White,1,1,0,0,0,1,0,0,0
+409294047,8,[11] scotland,0.73236793,80,6400,0,[2] Fair,0,[1] White,1,1,0,0,0,1,0,0,0
 409298127,8,[11] scotland,7.7406683,38,1444,1,[4] Very good,1,[1] White,0,0,1,0,1,1,0,0,0
 409299487,8,[11] scotland,7.7787557,47,2209,1,[3] Good,1,[1] White,0,0,0,0,0,0,0,0,0
 409302887,8,[11] scotland,7.5210366,71,5041,1,[3] Good,1,[1] White,1,1,1,1,1,0,1,0,1
@@ -11110,7 +11110,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 544156407,8,[2] north west,7.1195927,62,3844,0,[2] Fair,0,[1] White,1,0,1,0,1,1,1,0,1
 544156411,8,[2] north west,7.1195927,69,4761,0,[1] Poor,0,[1] White,1,1,1,0,1,1,1,1,1
 544156415,8,[2] north west,8.6977024,27,729,0,[2] Fair,0,[1] White,1,0,1,0,1,1,0,0,0
-544157767,8,[2] north west,.35065687,56,3136,1,[5] Excellent,1,[1] White,0,1,0,0,0,1,0,0,0
+544157767,8,[2] north west,0.35065687,56,3136,1,[5] Excellent,1,[1] White,0,1,0,0,0,1,0,0,0
 544158447,8,[2] north west,6.8472972,69,4761,0,[2] Fair,0,[1] White,1,0,1,0,1,1,1,0,1
 544158451,8,[2] north west,6.8472972,69,4761,0,[2] Fair,0,[1] White,1,1,1,0,1,1,1,0,1
 544159127,8,[2] north west,7.6597557,46,2116,1,[4] Very good,1,[1] White,0,0,1,0,1,1,0,0,0
@@ -21641,7 +21641,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1022195731,8,[7] london,8.3769732,61,3721,1,[3] Good,0,[4] Black,1,0,0,0,0,1,1,0,1
 1022195735,8,[7] london,8.3769732,26,676,1,[5] Excellent,0,[4] Black,0,1,1,0,1,1,1,0,1
 1022195739,8,[7] london,7.1151838,22,484,0,[2] Fair,1,[4] Black,0,0,1,0,1,1,1,0,1
-1022195743,8,[7] london,.5538851,22,484,1,[3] Good,0,[4] Black,0,0,1,0,1,1,1,1,1
+1022195743,8,[7] london,0.5538851,22,484,1,[3] Good,0,[4] Black,0,0,1,0,1,1,1,1,1
 1022196484,8,[6] east of england,7.3462253,80,6400,0,[2] Fair,0,[1] White,1,1,0,0,0,1,0,0,0
 1022197087,8,[7] london,7.6958985,49,2401,1,[3] Good,0,[5] Other,0,0,1,0,1,1,1,0,1
 1022197099,8,[7] london,7.6958985,24,576,1,[4] Very good,1,[5] Other,0,1,1,0,1,1,0,0,0
@@ -22357,7 +22357,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1088772499,8,[6] east of england,7.7663269,17,289,1,[5] Excellent,0,[1] White,0,1,0,0,0,1,1,0,1
 1088791527,8,[6] east of england,6.566813,71,5041,0,[2] Fair,1,[1] White,1,0,1,0,1,1,1,0,1
 1088801731,8,[6] east of england,6.7328067,65,4225,0,[2] Fair,0,[1] White,1,1,1,1,1,1,0,1,0
-1088806487,8,[6] east of england,.51082563,61,3721,1,[3] Good,1,[3] Asian,0,1,1,0,1,1,0,0,0
+1088806487,8,[6] east of england,0.51082563,61,3721,1,[3] Good,1,[3] Asian,0,1,1,0,1,1,0,0,0
 1088808527,8,[7] london,7.2586446,68,4624,1,[3] Good,1,[1] White,1,0,1,0,1,1,0,1,0
 1088811931,8,[7] london,6.6437898,81,6561,0,[2] Fair,0,[1] White,1,0,0,0,0,1,0,0,0
 1088816707,8,[7] london,7.7127614,26,676,1,[3] Good,0,[5] Other,0,0,1,0,1,1,1,0,1
@@ -22666,7 +22666,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1091529968,8,[7] london,7.7554817,24,576,1,[4] Very good,1,[1] White,0,0,0,0,0,1,0,0,0
 1091658570,8,[7] london,7.4591384,26,676,1,[5] Excellent,0,[1] White,0,1,0,0,0,1,0,0,0
 1091760572,8,[7] london,7.1775532,49,2401,1,[3] Good,0,[3] Asian,0,1,0,0,0,1,0,0,0
-1091869288,8,[6] east of england,.51082563,55,3025,0,[2] Fair,0,[3] Asian,0,0,1,0,1,1,1,0,1
+1091869288,8,[6] east of england,0.51082563,55,3025,0,[2] Fair,0,[3] Asian,0,0,1,0,1,1,1,0,1
 1091923682,8,[6] east of england,6.952879,46,2116,1,[4] Very good,1,[1] White,1,0,1,0,1,0,1,0,1
 1091958364,8,[6] east of england,7.266839,32,1024,1,[4] Very good,0,[1] White,0,1,0,0,0,1,1,0,1
 1091978770,8,[8] south east,8.1587391,29,841,1,[4] Very good,1,[5] Other,0,0,1,0,1,1,1,1,1
@@ -22917,7 +22917,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1156184287,8,[2] north west,8.1316776,50,2500,1,[4] Very good,1,[1] White,0,0,1,0,1,1,1,0,1
 1156184291,8,[2] north west,7.6014023,24,576,1,[3] Good,1,[1] White,0,0,0,0,0,1,0,0,0
 1156184295,8,[2] north west,7.570385,25,625,1,[5] Excellent,1,[1] White,1,1,0,0,0,0,0,0,0
-1156188375,8,[2] north west,.28517896,24,576,1,[3] Good,1,[1] White,0,0,0,0,0,1,0,0,0
+1156188375,8,[2] north west,0.28517896,24,576,1,[3] Good,1,[1] White,0,0,0,0,0,1,0,0,0
 1156189047,8,[2] north west,7.3544326,78,6084,1,[4] Very good,1,[1] White,1,1,1,0,1,1,1,0,1
 1156189051,8,[2] north west,7.3544326,75,5625,1,[3] Good,0,[1] White,1,0,1,0,1,1,1,0,1
 1156199255,8,[2] north west,7.3934169,61,3721,1,[3] Good,1,[1] White,1,1,0,0,0,1,1,1,1
@@ -23704,7 +23704,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1158289567,8,[8] south east,7.6119394,45,2025,1,[3] Good,0,[1] White,0,0,0,0,0,1,0,0,0
 1158304527,8,[3] yorkshire and the humber,8.3248615,36,1296,1,[4] Very good,1,[1] White,0,0,1,0,1,1,1,0,1
 1158304531,8,[3] yorkshire and the humber,8.3248615,36,1296,1,[3] Good,1,[1] White,0,1,0,0,0,1,0,0,0
-1158307251,8,[3] yorkshire and the humber,.60431594,31,961,1,[4] Very good,1,[3] Asian,0,1,1,0,1,1,1,0,1
+1158307251,8,[3] yorkshire and the humber,0.60431594,31,961,1,[4] Very good,1,[3] Asian,0,1,1,0,1,1,1,0,1
 1158326414,8,[9] south west,7.0773492,24,576,1,[3] Good,1,[1] White,1,0,1,0,1,1,1,0,1
 1158326967,8,[7] london,7.5715766,40,1600,1,[4] Very good,1,[4] Black,0,0,1,0,1,1,1,0,1
 1158330367,8,[7] london,6.4483089,66,4356,1,[3] Good,1,[3] Asian,1,1,0,0,0,1,0,0,0
@@ -27859,7 +27859,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1441246490,8,[5] west midlands,7.9870715,53,2809,1,[4] Very good,1,[1] White,0,1,1,0,1,1,0,0,0
 1441579650,8,[5] west midlands,7.3022189,37,1369,1,[3] Good,0,[1] White,0,0,0,0,0,1,1,0,1
 1441579690,8,[5] west midlands,7.3022189,41,1681,1,[5] Excellent,0,[1] White,0,1,0,0,0,1,0,0,0
-1441640850,8,[5] west midlands,.25270236,34,1156,,,,[3] Asian,0,0,1,0,1,1,1,0,1
+1441640850,8,[5] west midlands,0.25270236,34,1156,,,,[3] Asian,0,0,1,0,1,1,1,0,1
 1442402450,8,[5] west midlands,6.5806618,40,1600,1,[4] Very good,0,[3] Asian,0,1,0,0,0,1,0,0,0
 1442402490,8,[5] west midlands,6.5806618,27,729,1,[4] Very good,,[3] Asian,0,0,0,1,0,1,1,0,1
 1442620050,8,[6] east of england,6.6124444,36,1296,1,[4] Very good,0,[3] Asian,0,0,0,0,0,1,0,0,0
@@ -30252,7 +30252,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1632023135,8,[1] north east,7.2724714,28,784,1,[3] Good,0,[1] White,1,0,1,0,1,1,1,0,1
 1632023139,8,[1] north east,6.7745094,24,576,1,[3] Good,0,[1] White,0,0,0,0,0,1,0,0,0
 1632025167,8,[1] north east,7.80479,75,5625,1,[4] Very good,1,[1] White,0,0,1,0,1,0,0,0,0
-1632031967,8,[1] north east,.74668795,57,3249,1,[4] Very good,1,[1] White,0,0,0,0,0,1,1,1,1
+1632031967,8,[1] north east,0.74668795,57,3249,1,[4] Very good,1,[1] White,0,0,0,0,0,1,1,1,1
 1632031971,8,[1] north east,7.2621584,58,3364,1,[4] Very good,1,[1] White,1,1,1,0,1,0,0,0,0
 1632031979,8,[1] north east,6.8419499,27,729,1,[3] Good,1,[1] White,0,1,1,0,1,1,0,0,0
 1632035367,8,[1] north east,7.844698,44,1936,1,[4] Very good,0,[1] White,0,0,0,0,0,0,0,0,0
@@ -30422,7 +30422,7 @@ pidp,wave,gor_dv,leq_hhincome,age,age2,goodhealth,ghealth,degreehigher,ethnicity
 1632301935,8,[3] yorkshire and the humber,8.0324783,19,361,1,[5] Excellent,1,[1] White,0,1,0,0,0,1,0,0,0
 1632302611,8,[3] yorkshire and the humber,8.2360449,33,1089,1,[3] Good,1,[1] White,0,0,0,0,0,1,0,1,0
 1632306007,8,[3] yorkshire and the humber,7.8199925,42,1764,1,[5] Excellent,1,[1] White,0,0,1,0,1,1,1,1,1
-1632307367,8,[3] yorkshire and the humber,.75141609,57,3249,1,[3] Good,0,[1] White,0,1,0,0,0,1,0,0,0
+1632307367,8,[3] yorkshire and the humber,0.75141609,57,3249,1,[3] Good,0,[1] White,0,1,0,0,0,1,0,0,0
 1632310767,8,[3] yorkshire and the humber,7.2050261,70,4900,1,[3] Good,0,[1] White,0,1,0,0,0,1,0,0,0
 1632310771,8,[3] yorkshire and the humber,7.2050261,69,4761,1,[3] Good,0,[1] White,0,0,1,0,1,1,0,0,0
 1632314167,8,[3] yorkshire and the humber,7.7481036,47,2209,1,[3] Good,0,[1] White,0,0,0,0,0,1,1,0,1
