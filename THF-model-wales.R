@@ -3,35 +3,50 @@
 #####################################################
 
 # • A brief explanation of what problem you are trying to solve and the data you have used
+
+# RESEARCH QUESTION:
+# What is the relationship between the accessibility of medical services (GP surgeries and hospitals)
+# and the likelihood of their use? Focus on inpatient care among a general population cohort in Wales in 2017.
+
+# WHY?:
+# Up to 10 million people in rural Britain live in 'healthcare deserts' (Royal College of Nursing - 2019).
+# Movements towards a digital health service would exacerbate accessibility issues.
+# Is this already reflected in patterns of healthcare use? At equal health levels, are people in more remote
+# areas admitted to hospital less frequently?
+# I have restricted analysis to Wales because, through recent for the Welsh Government for a transport
+# scheme, I have already processed data on service accessibility and I am familiar with the
+# survey data available for that region.
+
+# DATA:
+# Survey data from waves 8 and 9 of Understanding Society - the largest nationally representative
+# longitudinal survey in the UK (ESRC). 
+# Data on household location imputed using urban/rural indicator and directory of postcodes from the ONS
+# Locations of GP surgeries in the UK - extracted from NHS Digital.
+# Locations of hospitals in the UK - web-scraped from Open Street Maps.
+
 # • The approach you have taken to solving the problem
 
-#Why this data and why this research question
-#Recently been working on research for welsh government, on benefits of a transport scheme
-#Decided to draw on some of my knowledge from that geodata, but apply to the health area
-#Looking at what person-level data i had available, decided to look at...
+# METHODOLOGY:
+# Pool together survey data and geodata harvested from online resources and transformed into predictors.
+# Survey data: Used longitudinal element of Understanding Society to create new outcome in wave 8:
+# 'will require inpatient/outpatient  care in the next 12 months'.
+# Data imputation: household location is not available on the public version of the survey dataset.
+# For the sake of this exercise, I resort to second best solution: impute postcodes at random (with replacement)
+# based on whether survey repondents live in a rural or urba area (e.g. if you live in urban area in Wales,
+# you may get assigned a Cardiff postcode).
+# GIS analysis (geographic information system): For each postcode, I have prepared a function that
+# summarizes: how close your nearest GP surgery or hospital is, and how many are within a distance buffer
+# from where you live. This new predictor is then merged back into the survey responses.
+# I use logistic regressions to assess the impact of several factors on the likelihood of accessing
+# inpatient care in the next 12 months.
+# I assess the marginal impact of those factors on that likelihood, and assess the accuracy of thsoe
+# prediction models with ROC curves.
 
-#Does being closer to medical resources mean you have better health and thus less
-#likely to become a patient, or is the distance an impediment?
-#Unless in extreme cases, people are usually able to reach care in this country
+##############################################
+################### SETUP ####################
+##############################################
 
-#Hype up the data, say that people it's reallt good but people don't use it for prediction ofter, but it's
-#possible to do so by manipulating the data structure: what happens to the person in the future
-#I want to pool together survey data, web-scraped information and GIS analysis
-#to explore this question
-
-#I restrict to Wales because of recent work i've been doing for Welsh gvt so it's in my mind
-#And also because the GIS functions are sometimes intensive so it's good to have smaller data
-
-#Set out the research question: Does... ?
-#Explain data you will use
-#Explain the difficulties and how you will solve them brieflt
-#Take them through the code to show what it looks like
-
-#Edit code to make it run faster (only import what you need to)
-
-######################################################
-################### LOAD PACKAGES ####################
-######################################################
+################## Load packages
 
 if (!require("pacman")) install.packages("pacman")
 
@@ -39,15 +54,20 @@ pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,gmodels,Rmisc,DescTools,data.table,
                Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,
                skimr,ROCR,pROC,margins,jtools)
 
-rm(list = ls()) ##### Clean up the global environment
+################## Clean up the global environment
+
+rm(list = ls())
+
+################## Set directory
+
+setwd(str_replace_all(path.expand("~"), "Documents", ""))
+setwd("Documents/GitHub/THF-model-wales/Files/")
 
 ########################################################################
 ################### PRE-LOAD USER-WRITTEN FUNCTIONS ####################
 ########################################################################
 
-#This function will, for each reference point (e.g.post code), compute the number of items
-#within a given buffer and find the nearest item
-
+################## Functions for geo-spatial analysis
 number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.spdf){
   
   #Buffer around the selected admin-area
@@ -131,33 +151,16 @@ number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.sp
   return(end.mat)
 }
 
-######################################################
-################### SET DIRECTORY ####################
-######################################################
+#This function will, for each reference point (e.g.post code), compute the number of items
+#(e.g. GP surgery) within a given buffer and find the nearest item
 
-setwd(str_replace_all(path.expand("~"), "Documents", ""))
-setwd("Documents/GitHub/THF-model-wales/Files/")
-
-############################################################################
-################### PROJECTIONS FOR GEOSPATIAL ANALYSIS ####################
-############################################################################
-
+################## Projection codes
 ukgrid = "+init=epsg:27700"
 latlong="+init=epsg:4326"
 
-##########################################################
-################### IMPORT SURVEY DATA ###################
-##########################################################
-
-#Wave 8 (2017) of Understanding Society, a nationally-representative
-#longitudinal population survey (from ESRC)
-#Includes health module, including outcomes on health resource utilisation
-#We can manipulate this dataset and coax into a structure similar to
-#A retrospective observational study
-#Useful to describe associations and produce prediction models
-#We would like to describe the likelihood of being being an inpatient our outpatient
-#Using a set of standard socio-economic predictors, but also location-based variables
-#That we obtain using web-scraping and GIS analysis
+###################################################
+################### SURVEY DATA ###################
+###################################################
 
 ################## Import dataset
 
@@ -165,12 +168,10 @@ USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.nam
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
 
-################## Explore dataset
-
-#10.3% of sample required in-patient treatment the year being surveyed
+##################  10.3% of sample required in-patient treatment the year being surveyed
 round(mean(USoc$inpatient_nexttyear)*100,1)
 
-#The median age of those who went to hospital was 6 years higher
+##################  The median age of those who went to hospital was 6 years higher
 mu_age <- ddply(USoc, "inpatient_nexttyear", summarise, age.median=median(age))
 USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inpatient_nexttyear))) +
   geom_density(alpha=0.5) + theme(panel.background = element_blank()) + ggtitle("Distribution of age") +
@@ -179,14 +180,15 @@ USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inp
   scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) + labs(fill = "Inpatient care next 12m",col="Inpatient care next 12m")
 rm(mu_age)
 
-#The majority (almost 60%) of thsoe who went to hospital already had a long-term condition
-#Compared to 40% in the rest of the cohort
+##################  Those with a pre-existing long-term health condition had a 14% likelhood of
+##################  requiring inpatient care in the next 12m - compared to only 7% in those without one
 USoc %>% ddply(., "LT_health", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=rate.inpatient, fill=factor(LT_health))) +
   geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient), position=position_dodge(width=0.9)) +
   scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=1) + labs(fill = "Long-term health condition") + xlab("Long-term health condition") + ylab("%") + ggtitle("% requiring inpatient care next 12m") + theme_minimal()
 
-#There is, at first sight, no relationship between living in an urban area and being admitted to hospital
+##################  There is, at first sight, no relationship between living in an urban area
+##################  and being admitted to hospital
 USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(urban), y=rate.inpatient, fill=factor(urban))) +
   geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient), position=position_dodge(width=0.9)) +
@@ -228,7 +230,7 @@ Survey_postcodes_shp <- SpatialPointsDataFrame(cbind(Wales_postcodes_small$long,
                                               data = Wales_postcodes_small,
                                               proj4string = CRS(latlong)) %>% subset(., pcode %in% USoc$pcode)
 
-leaflet(Survey_postcodes_shp,options = leafletOptions(zoomControl = FALSE)) %>%
+leaflet(Survey_postcodes_shp) %>%
   addProviderTiles(providers$Stamen.Terrain) %>% addCircleMarkers(data=Survey_postcodes_shp,fillColor = "blue",radius=5, fillOpacity = 0.5,stroke=T,col="#737373",weight = 1)
 
 ###############################################################
@@ -268,7 +270,6 @@ rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_full,Wales_postc
 ################## Note areas in the middle with much lower provison (relative to population density)
 
 palher <- colorFactor(palette=c("#e7298a","#e6ab02"), levels = c("GP","hospital"))
-
 leaflet(healthcare_resources_shp) %>%
   addProviderTiles(providers$Stamen.Terrain) %>%
   addCircleMarkers(data=healthcare_resources_shp,fillColor = ~palher(Type),radius=5,
@@ -294,8 +295,8 @@ survey.predictors.wales <- fread("Welsh postcodes small 20km.csv",
                          header=TRUE, sep=",", check.names=T)
 
 ################## How is this new predictor distributed?
-################## This confirms that, overall, access is good but some residential postcodes
-################## Live more than 10km from a GP surgery
+################## This confirms that, overall, access is good (median distance 700m)
+################## but about 5% of postcodes are more than 6km away from a GP surgery
 
 round(median(survey.predictors.wales$dist.to.point*1000),1)
 ggplot(survey.predictors.wales, aes(dist.to.point, fill = cut(dist.to.point, 100))) +
@@ -310,29 +311,33 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 ###################  REGRESSION MODELS TO ASSESS IMPACT #################
 #########################################################################
 
-#Age is associated with a higher likelihood of a stay in hospital
-Model_1 <-  glm(inpatient_nexttyear ~ age+male_fe+leq_hhincome,data=USoc, family=binomial)
+##################  Age is associated with a higher likelihood of a stay in hospital
+Model_1 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome,data=USoc, family=binomial)
 jtools::plot_summs(Model_1, scale = TRUE)
 cplot(Model_1, "age")
 
-#But after adjusting for health conditions, this is more likely related to comorbidities
-#In fact, age is no longer a significant predictor and we see that those with pre-existing
-#long-term conditions are twice as likely to need inpatient care
+##################  But after adjusting for health conditions, this is more likely related to health
+##################  In fact, age is no longer a significant predictor and we see that those with pre-existing
+##################  long-term conditions are still almost twice as likely to need inpatient care
 Model_2 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health,data=USoc, family=binomial)
 jtools::plot_summs(Model_2, scale = TRUE)
 
-vis_model2 <- cbind.data.frame(LT_health=Model_2$data$LT_health,pred=predict(Model_2, type="response")) %>%
-  ddply(., "LT_health", summarise, mean.likelihood=mean(pred*100)) %>% round(.,1) %>%
+##################  Plot margins
+new_data <- rbind(USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=1,.),
+      USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=0,.))
+predicted_data <- predict(Model_2, newdata = new_data, type="response")
+
+vis_model2 <- cbind.data.frame(LT_health=new_data$LT_health,mean.likelihood=predicted_data*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=mean.likelihood,
                 fill=factor(LT_health))) + geom_bar(stat="identity") + geom_text(aes(label=mean.likelihood), position=position_dodge(width=1)) + scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) +
   labs(fill = "Previous health condition") + xlab("Previous health condition") + ylab("%") + theme_minimal() + ggtitle("Predicted likelihood of needing inpatient care")
 vis_model2
 
-#Living in an urban area is not associated with more hospital stays
+################## Living in an urban area is not associated with more hospital stays
 Model_3 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
 jtools::plot_summs(Model_3, scale = TRUE)
 
-#Neither is living further away from a GP or hospital
+################## Neither is living further away from a GP or hospital
 Model_4 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 jtools::plot_summs(Model_4, scale = TRUE)
 
@@ -340,14 +345,14 @@ jtools::plot_summs(Model_4, scale = TRUE)
 ############# ASSESSMENT OF PREDICTIVE MODEL ############
 #########################################################
 
-#AUC (area under the curve) of model is 0.605
-#Not a good model for predicting need for inpatient care - only slightly better than random prediction (AUC of 0.5)
+################## AUC (area under the curve) of model is 0.605
+################## Not a good model for predicting need for inpatient care - only slightly better than random prediction (AUC of 0.5)
 predict_model4 <- predict(Model_4, type="response")
 AUC <- pROC::roc(Model_4$data$inpatient_nexttyear,predict_model4)
 AUC
 
-#Plot the ROC curve for a model: true positive rate vs. false positive rate
-#And the optimal cut-off point for prediction using this model
+################## Plot the ROC curve for a model: true positive rate vs. false positive rate
+################## And the optimal cut-off point for prediction using this model
 ROCRpred_model4 <-  ROCR::prediction(predict_model4, Model_4$data$inpatient_nexttyear)
 ROCRperf_model4 <- performance(ROCRpred_model4, "tpr", "fpr")
 plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
@@ -357,10 +362,34 @@ plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 #############################################################
 
 # • What you learned in this project from an analysis and coding perspective
+
+# Analysis perspective:
+
+# Descriptive findings quite striking: suggests approx. 10% of general population require inpatient treatment
+# each year (this includes for childbirth too). Also suprised by the high rate of people who consider
+# themselves to have a long-term illness (just under 50%, includes hypertension, asthma, mental health).
+# I was pleasantly surprised that the distance to GP surgery in Wales is quite short, although there are
+# exceptions - and a short linear distance doesn't mean a short journey time (no roads).
+# I was surprised to see that income didn't have a stronger impact on healthcare use
+# (although we do adjust for health).
+
+# Coding perspective:
+
+# Taking longitudinal surveys and using future information to create datasets that accomodate
+# predictive analytics.
+# Using powerful tools for GIS analysis available within R itself (e.g. raster, sp, rgdal packages).
+# Displaying results in maps (extensions are heat maps and choropleth maps).
+# A good example of putting user-written functions to use to create new predictors.
+# Making code run faster: exploiting multi-core element and parallel computing (mclapply).
+# Using jtools package to summarise regresison results in a very intuitive way.
+
 # • Reflections on what you would do differently in another project
 
-#Use real postcodes (otherwise just info from urban/rural plus noise)
-#Perhaps look at non-urgent care where distance may be more of a factor
-#Journey times by car/PT rather than as-the-crow-flies distance
-#Use whole UK, allow interactions
-#Focus on those more remote areas
+# In a real-world, setting I would request real household locations (otherwise just info from urban/rural
+# plus noise). This would also allow me to see whether I have the most remote, potentially vulnerable
+# households in my dataset.
+# Look at non-urgent/outpatient care where distance may be more of a factor in deciding to see a doctor.
+# Journey times by car/PT rather than as-the-crow-flies distance
+# Try a different model for whole UK and allow interactions to assess different impacts according to region.
+# Use R Notebook to present analysis
+
