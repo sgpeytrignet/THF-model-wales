@@ -39,7 +39,7 @@
 # from where you live. This new predictor is then merged back into the survey responses based on the imputed
 # postcode.
 # I use logistic regressions to assess the impact of several factors on the likelihood of accessing
-# in-patient care in the next 12 months.
+# inpatient care in the next 12 months.
 # I assess the marginal impact of those factors on the likelihood, and assess the performance of thsoe
 # prediction models with ROC curves.
 
@@ -169,31 +169,33 @@ USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.nam
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
 
-##################  10.3% of sample required in-patient treatment the year being surveyed
+##################  10.3% of sample required inpatient treatment the year being surveyed
 round(mean(USoc$inpatient_nexttyear)*100,1)
 
 ##################  The median age of those who went to hospital was 6 years higher
+##################  Another peak in 20's (in both men and women)
 mu_age <- ddply(USoc, "inpatient_nexttyear", summarise, age.median=median(age))
 USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inpatient_nexttyear))) +
-  geom_density(alpha=0.5) + theme(panel.background = element_blank()) + ggtitle("Distribution of age") +
+  geom_density(alpha=0.5) + theme(panel.background = element_blank(),legend.position="bottom") + ggtitle("Distribution of age") +
   geom_vline(data=mu_age, aes(xintercept=age.median, color=factor(inpatient_nexttyear)),
-             linetype="dashed") + scale_colour_brewer(type="qual",labels = c("No", "Yes"),palette=4) +
-  scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) + labs(fill = "Inpatient care next 12m",col="Inpatient care next 12m")
+             linetype="dashed") + scale_colour_brewer(type="qual",labels = c("No", "Yes"),palette=4) + scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) + labs(fill = "Inpatient care next 12m",col="Inpatient care next 12m")
 rm(mu_age)
 
 ##################  Those with a pre-existing long-term health condition had a 14% likelhood of
 ##################  requiring inpatient care in the next 12m - compared to only 7% in those without one
 USoc %>% ddply(., "LT_health", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=rate.inpatient, fill=factor(LT_health))) +
-  geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient), position=position_dodge(width=0.9)) +
-  scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=1) + labs(fill = "Long-term health condition") + xlab("Long-term health condition") + ylab("%") + ggtitle("% requiring inpatient care next 12m") + theme_minimal()
+  geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient, y = rate.inpatient + 1), position=position_dodge(width=0.9)) +
+  scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=1) + labs(fill = "Long-term health condition") + xlab("Long-term health condition") + ylab("%") + ggtitle("% requiring inpatient care next 12m") + 
+  theme(panel.background = element_blank(),legend.position="bottom")
 
 ##################  There is, at first sight, no relationship between living in an urban area
 ##################  and being admitted to hospital
 USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(urban), y=rate.inpatient, fill=factor(urban))) +
-  geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient), position=position_dodge(width=0.9)) +
-  scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=2) + labs(fill = "Living in urban area") + xlab("Living in urban area") + ylab("%") + ggtitle("% requiring inpatient care next 12m") + theme_minimal()
+  geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient, y = rate.inpatient + 1), position=position_dodge(width=0.9)) +
+  scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=2) + labs(fill = "Living in urban area") + xlab("Living in urban area") + ylab("%") + ggtitle("% requiring inpatient care next 12m") +
+  theme(panel.background = element_blank(),legend.position="bottom")
 
 #What if we had more precise data on distance to the nearest GP/Hospital, would we find the same thing?
 #We don't know where people live in this version of the dataset, but we do have an urban/rural indicator
