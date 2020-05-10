@@ -2,6 +2,9 @@
 ################### INTRODUCTION ####################
 #####################################################
 
+# For this assessment, not having access to real patient data, I was keen to talk you through a small piece of analysis that involves
+# survey data with health outcomes, but also linked to external variables - in this case geospatial data.
+
 # • A brief explanation of what problem you are trying to solve and the data you have used
 
 # RESEARCH QUESTION:
@@ -9,39 +12,37 @@
 # and the likelihood of their use? Focus on inpatient care among a general population cohort in Wales in 2017.
 
 # WHY?:
-# Up to 10 million people in rural Britain live in 'healthcare deserts' (Royal College of Nursing - 2019).
-# Movements towards a digital health service would exacerbate accessibility issues.
-# Is this already reflected in patterns of healthcare use? At equal levels of health, are people in more remote
-# areas admitted to hospital less frequently?
+# According to Royal College of Nursing last year - Up to 10 million people in rural Britain live in 'healthcare deserts'.
+# If we move towards a digital health service, this could get even worse.
+# Are differences based on proximity already reflected in patterns of healthcare use?
 # I have restricted analysis to Wales because, through recent for the Welsh Government for a transport
 # scheme, I have already processed data on service accessibility and I am familiar with the
 # survey data available for that region.
 
 # DATA:
 # Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
-# longitudinal survey in the UK (Funded by UK government, run from University of Essex). 
-# Data on household location imputed using survey urban/rural indicator and ONS directory of postcodes
+# longitudinal survey in the UK (Funded by UK government, frequently used to conduct social research).
+# It has a questionnaire module on health and healthcare use.
 # Locations of GP surgeries in the UK - extracted from NHS Digital database.
 # Locations of hospitals in the UK - web-scraped from Open Street Maps using Overpass Turbo.
 
 # • The approach you have taken to solving the problem
 
 # METHODOLOGY:
-# Pool together survey data and external variables, built using geodata harvested from online resources.
-# Survey data: Used longitudinal element of Understanding Society to create new outcome in wave 8:
-# 'will require inpatient/outpatient  care in the next 12 months'. End up with a cross-section.
-# Data imputation: household location is not available on the public version of the survey dataset.
-# For the sake of this exercise, I resort to second-best solution: impute postcodes at random (with replacement)
-# based on whether survey repondents live in a rural or urban area (e.g. if you live in urban area in Wales,
+# Merged survey data with external variables, that I built using web-scraped geodata.
+# Survey data: create new outcome in wave 8 based on wave 9 information: 
+# 'will require inpatient care in the next 12 months'. End up with a cross-section, but with info on future.
+# Data imputation: household location is not available in the public version of Understanding Society.
+# For the sake of this exercise, I resort to second-best solution: impute postcodes at random
+# based on whether repondents live in a rural or urban area (e.g. if you live in urban area in Wales,
 # you may get assigned a Cardiff or Swansea postcode).
-# GIS analysis (geographic information system): For each postcode, I have prepared a function that
-# summarizes: how close your nearest GP surgery/hospital is, and how many can be found within a distance buffer
-# from where you live. This new predictor is then merged back into the survey responses based on the imputed
-# postcode.
-# I use logistic regressions to assess the impact of several factors on the likelihood of accessing
-# inpatient care in the next 12 months.
-# I assess the marginal impact of those factors on the likelihood, and assess the performance of thsoe
-# prediction models with ROC curves.
+# GIS analysis (geographic information systems): How did I create the new predictor?
+# I wrote a function that summarizes for each postcode: how close your nearest GP surgery/hospital is,
+# and how many can be found within a distance buffer from where you live.
+# This new predictor is merged back into the survey responses based on the imputed postcode.
+# I used logistic regressions to assess the impact of those factors on the likelihood of accessing
+# inpatient care and I assess the marginal impact of those factors on the likelihood.
+# Finally, I assess the performance of those prediction models with ROC curves.
 
 ##############################################
 ################### SETUP ####################
@@ -51,9 +52,7 @@
 
 if (!require("pacman")) install.packages("pacman")
 
-pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,gmodels,Rmisc,DescTools,data.table,
-               Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,
-               skimr,ROCR,pROC,margins,jtools)
+pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,gmodels,Rmisc,DescTools,data.table,Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,skimr,ROCR,pROC,margins,jtools)
 
 ################## Clean up the global environment
 
@@ -68,14 +67,8 @@ setwd("Documents/GitHub/THF-model-wales/Files/")
 ################### PRE-LOAD USER-WRITTEN FUNCTIONS ####################
 ########################################################################
 
-################## Functions for geo-spatial analysis
+################## Function to produce 'distance to GP surgery' predictor
 number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.spdf){
-  
-  #Buffer around the selected admin-area
-  # k=825
-  # distpar_km=1
-  # adminpoints.spdf=Survey_postcodes_shp
-  # interestpoints.spdf=healthcare_resources_shp
   
   aux.refpoint <- adminpoints.spdf[k,] #Isolate the admin-area-center
   
@@ -169,8 +162,8 @@ USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.nam
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
 
-##################  10.3% of sample required inpatient treatment the year being surveyed
-round(mean(USoc$inpatient_nexttyear)*100,1)
+##################  10% of sample required inpatient treatment the year after being surveyed
+round(mean(USoc$inpatient_nexttyear)*100,0)
 
 ##################  The median age of those who went to hospital was 6 years higher
 ##################  Another peak in 20's (in both men and women)
@@ -235,15 +228,11 @@ Survey_postcodes_shp <- SpatialPointsDataFrame(cbind(Wales_postcodes_small$long,
 leaflet(Survey_postcodes_shp) %>%
   addProviderTiles(providers$Stamen.Terrain) %>% addCircleMarkers(data=Survey_postcodes_shp,fillColor = "blue",radius=5, fillOpacity = 0.5,stroke=T,col="#737373",weight = 1)
 
-###############################################################
-################### IMPORT WEB-SCRAPED DATA ###################
-###############################################################
+############################################################################
+################### IMPORT (WEB-SCRAPED) GEOSPATIAL DATA ###################
+############################################################################
 
 ################## Import GP surgery locations (NHS Digital)
-
-#This is a pre-cleaned dataset, where I've extracted the practice postcode from the address
-#then merged in geographical coordinates based on that postcode, and kept only those in Wales
-#We then convert the data frame into a shapefile
 
 gp_surgeries <- fread("epraccur-clean.csv", header = T, sep = ',', data.table = T)
 
@@ -253,10 +242,7 @@ gp_surgeries_shp <- SpatialPointsDataFrame(cbind(gp_surgeries$long,gp_surgeries$
 
 ################## Import hospital locations (Open Street Maps)
 
-#Import data on Hospitals and Pharmacies web-scraped from OpenStreetMaps
-#These are objects tagged with amenity=hospital, uoloaded  by users
-#Extracted using Overpass Turbo, an online tool, and saving shapefile locally
-#To make processing easier, we will only keep points and ignore polygons
+#Import data on Hospitals web-scraped from OpenStreetMaps (an open-source Google Maps)
 
 OSM_points_shp <- readOGR("hospitals.geojson", "hospitals", require_geomType="wkbPoint") #Import shapefile
 OSM_points_shp <- spTransform(OSM_points_shp, CRS(latlong)) #Set to the same projection
@@ -293,8 +279,7 @@ survey.predictors.wales
 
 ##################  Applying can take up to 30min, so let's import the ready-made results instead
 
-survey.predictors.wales <- fread("Welsh postcodes small 20km.csv",
-                         header=TRUE, sep=",", check.names=T)
+survey.predictors.wales <- fread("Welsh postcodes small 20km.csv",header=TRUE, sep=",", check.names=T)
 
 ################## How is this new predictor distributed?
 ################## This confirms that, overall, access is good (median distance 700m)
@@ -324,7 +309,7 @@ cplot(Model_1, "age")
 Model_2 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health,data=USoc, family=binomial)
 jtools::plot_summs(Model_2, scale = TRUE)
 
-##################  Plot margins
+##################  Plot margins for long-term health
 new_data <- rbind(USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=1,.),
       USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=0,.))
 predicted_data <- predict(Model_2, newdata = new_data, type="response")
@@ -367,29 +352,29 @@ plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 
 # Analysis perspective:
 
-# Descriptive findings quite striking: suggests approx. 10% of general population require inpatient treatment
-# each year (this includes for childbirth too). Also suprised by the high rate of people who consider
-# themselves to have a long-term illness (just under 50%, includes hypertension, asthma, mental health).
-# I was pleasantly surprised that the distance to GP surgery in Wales is quite short, although there are
-# exceptions - and a short linear distance doesn't mean a short journey time (no roads).
+# Descriptive findings quite striking: suggests approx. 10% of Welsh population needed hospital care in 2017.
+# Also suprised by the high rate of people who consider themselves to have a long-term illness
+# (just under 50%, includes hypertension, asthma, mental health).
+# I was pleasantly surprised that the distance to a surgery in Wales is quite short, although there are
+# exceptions - and a short linear distance doesn't always translate into a short journey time (no roads).
 # I was surprised to see that income didn't have a stronger impact on healthcare use
-# (although we do adjust for health).
+# (although we do also adjust for health).
 
 # Coding perspective:
 
 # Taking longitudinal surveys and using future information to create datasets that accomodate
 # predictive analytics.
-# Using powerful tools for GIS analysis available within R itself (e.g. raster, sp, rgdal packages).
+# R enables powerful tools for GIS analysis (e.g. raster and sp packages).
 # Displaying results in maps (extensions are heat maps and choropleth maps).
 # A good example of putting user-written functions to use to create new predictors.
-# Making code run faster: exploiting multi-core element and parallel computing (mclapply).
-# Using jtools package to summarise regresison results in a very intuitive way.
+# Making code run faster: exploited multi-core element and parallel computing (mclapply function).
+# Using jtools package to summarise regression results in a very intuitive way.
 
 # • Reflections on what you would do differently in another project
 
 # In a real-world, setting I would request real household locations (otherwise just info from urban/rural
-# plus noise). This would also allow me to see whether I have the most remote, potentially vulnerable
-# households in my dataset.
+# plus noise). This would also allow me to see whether my dataset does have the most remote
+# potentially vulnerable households
 # Look at non-urgent/outpatient care where distance may be more of a factor in deciding to see a doctor.
 # Journey times by car/PT rather than as-the-crow-flies distance.
 # Prediction with small models is prone to over-fitting, so I would use methods for cross-validation.
