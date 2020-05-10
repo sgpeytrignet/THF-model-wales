@@ -35,7 +35,7 @@
 # For the sake of this exercise, I resort to second-best solution: impute postcodes at random
 # based on whether repondents live in a rural or urban area (e.g. if you live in urban area in Wales,
 # you may get assigned a Cardiff or Swansea postcode).
-# - GIS analysis (geographic information systems): How did I create the new predictor?
+# - GIS analysis: How did I create the new predictor?
 # I wrote a function that summarizes for each postcode: how close your nearest GP surgery/hospital is.
 # This new predictor is merged back into the survey responses based on the imputed postcode.
 # - Models: I used logistic regressions to assess the impact of those factors on the likelihood of accessing
@@ -241,11 +241,13 @@ leaflet(healthcare_resources_shp) %>%
   addCircleMarkers(data=healthcare_resources_shp,fillColor = ~palher(Type),radius=5,
                    fillOpacity = 0.5,stroke=T,col="#737373",weight = 1) %>% addLegend("bottomright", col=c("#e7298a","#e6ab02"), title = 'Amenity', labels=c("GP","hospital"),opacity = 1) # legend title
 
+#Now, let's create the distance to nearest GP/hospital for these survey respondents (*)
+
 ##############################################################
 ################### PRODUCE NEW PREDICTORS ###################
 ##############################################################
 
-##################  Test the user-written function for first 5 postcodes among survey responses (*)
+##################  Test the user-written function for first 5 postcodes among survey responses
 loop.support.one <- 1:5
 Survey_postcodes_shp <- spTransform(Survey_postcodes_shp, CRS(ukgrid))
 healthcare_resources_shp <- spTransform(healthcare_resources_shp, CRS(ukgrid))
@@ -265,8 +267,10 @@ ggplot(survey.predictors.wales, aes(dist.to.point, fill = cut(dist.to.point, 100
   geom_histogram(show.legend = FALSE) + theme_minimal() + labs(x = "Km to nearest GP/hospital", y = "n") +
   ggtitle("Histogram") + scale_fill_discrete(h = c(240, 10), c = 120, l = 70)
 
-################## Merge new predictor into the survey based on the imputed postcodes
+################## Merge new predictor into the survey (*)
 USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
+
+#Now, let's run our logistic regression models (*)
 
 #########################################################################
 ###################  REGRESSION MODELS TO ASSESS IMPACT #################
@@ -299,24 +303,24 @@ vis_model2
 Model_3 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
 jtools::plot_summs(Model_3, scale = TRUE)
 
-################## Neither is living further away from a GP or hospital (*)
+################## Actually - neither is living further away from a GP or hospital (*)
 Model_4 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 jtools::plot_summs(Model_4, scale = TRUE)
 
-#########################################################
-############# ASSESSMENT OF PREDICTIVE MODEL ############
-#########################################################
-
-################## This model has poor predictive performance (AUC of 0.6) (*)
-################## Only slightly better than random prediction
-predict_model4 <- predict(Model_4, type="response")
-AUC <- pROC::roc(Model_4$data$inpatient_nexttyear,predict_model4)
-AUC
-
-################## Also reflected in the ROC curve (*)
-ROCRpred_model4 <-  ROCR::prediction(predict_model4, Model_4$data$inpatient_nexttyear)
-ROCRperf_model4 <- performance(ROCRpred_model4, "tpr", "fpr")
-plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
+# #########################################################
+# ############# ASSESSMENT OF PREDICTIVE MODEL ############
+# #########################################################
+# 
+# ################## This model has poor predictive performance (AUC of 0.6)
+# ################## Only slightly better than random prediction
+# predict_model4 <- predict(Model_4, type="response")
+# AUC <- pROC::roc(Model_4$data$inpatient_nexttyear,predict_model4)
+# AUC
+# 
+# ################## Also reflected in the ROC curve
+# ROCRpred_model4 <-  ROCR::prediction(predict_model4, Model_4$data$inpatient_nexttyear)
+# ROCRperf_model4 <- performance(ROCRpred_model4, "tpr", "fpr")
+# plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
 
 #############################################################
 ################### SUMMARISE THE POINTS BELOW ##############
