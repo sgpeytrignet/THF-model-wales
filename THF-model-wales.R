@@ -247,7 +247,7 @@ leaflet(healthcare_resources_shp) %>%
 ################### PRODUCE NEW PREDICTORS ###################
 ##############################################################
 
-##################  Test the user-written function for first 5 postcodes among survey responses
+##################  Test the user-written function for first 5 postcodes among survey responses (*)
 loop.support.one <- 1:5
 Survey_postcodes_shp <- spTransform(Survey_postcodes_shp, CRS(ukgrid))
 healthcare_resources_shp <- spTransform(healthcare_resources_shp, CRS(ukgrid))
