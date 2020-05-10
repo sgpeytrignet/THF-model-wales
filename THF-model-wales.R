@@ -145,15 +145,15 @@ latlong="+init=epsg:4326"
 ################### SURVEY DATA ###################
 ###################################################
 
-################## Import dataset
+################## Import dataset (*)
 USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.names=T) %>% 
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
 
-##################  10% of sample needed hospital care the year after being surveyed
+##################  10% of sample needed hospital care the year after being surveyed (*)
 round(mean(USoc$inpatient_nexttyear)*100,1)
 
-##################  The median age of those who needed hospital care was 6 years higher
+################## The median age of those who needed hospital care was 6 years higher (*)
 mu_age <- ddply(USoc, "inpatient_nexttyear", summarise, age.median=median(age))
 USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inpatient_nexttyear))) +
   geom_density(alpha=0.5) + theme(panel.background = element_blank(),legend.position="bottom") + ggtitle("Distribution of age") +
@@ -161,15 +161,15 @@ USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inp
              linetype="dashed") + scale_colour_brewer(type="qual",labels = c("No", "Yes"),palette=4) + scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) + labs(fill = "Inpatient care next 12m",col="Inpatient care next 12m")
 rm(mu_age)
 
-##################  Those with a pre-existing long-term health condition had a 14% likelhood of
-##################  needing hospital care - compared to only 7% in those without one
+##################  Those with a pre-existing long-term health condition were twice as likely (*)
+##################  to need hospital care
 USoc %>% ddply(., "LT_health", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=rate.inpatient, fill=factor(LT_health))) +
   geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient, y = rate.inpatient + 1), position=position_dodge(width=0.9)) +
   scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=1) + labs(fill = "Long-term health condition") + xlab("Long-term health condition") + ylab("%") + ggtitle("% requiring inpatient care next 12m") + 
   theme(panel.background = element_blank(),legend.position="bottom")
 
-##################  There is, at first sight, no relationship between living in an urban area
+##################  There is, at first sight, no relationship between living in an urban area (*)
 ##################  and needing hospital care
 USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(urban), y=rate.inpatient, fill=factor(urban))) +
@@ -177,7 +177,7 @@ USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*1
   scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=2) + labs(fill = "Living in urban area") + xlab("Living in urban area") + ylab("%") + ggtitle("% requiring inpatient care next 12m") +
   theme(panel.background = element_blank(),legend.position="bottom")
 
-#What if we had more precise data on distance to the nearest GP/Hospital, would we find the same thing?
+#What if we had more precise data on distance to the nearest GP/Hospital, would we find the same thing? (*)
 #We don't know where people live in this version of the dataset, but we do have an urban/rural indicator
 #So, as a thought experiment, let's impute postcodes to respondents based on that indicator
 
@@ -206,7 +206,7 @@ imputed_postcodes <- rbind(USoc_imputed_pcode_urban,USoc_imputed_pcode_rural) %>
 USoc <- left_join(USoc,imputed_postcodes,by="pidp")
 rm(urban_postcodes,samples_postcodes_urban_idx,USoc_imputed_pcode_urban,rural_postcodes,samples_postcodes_rural_idx,USoc_imputed_pcode_rural,USoc_rural,USoc_urban,imputed_postcodes)
   
-################## Visualize (imputed) locations of survey respondents
+################## Visualize (imputed) locations of survey respondents (*)
 Survey_postcodes_shp <- SpatialPointsDataFrame(cbind(Wales_postcodes_small$long,Wales_postcodes_small$lat),
                                               data = Wales_postcodes_small,
                                               proj4string = CRS(latlong)) %>% subset(., pcode %in% USoc$pcode)
@@ -230,7 +230,7 @@ OSM_points_shp <- spTransform(OSM_points_shp, CRS(latlong)) #Set to the same pro
 OSM_points_shp@data <- select(OSM_points_shp@data,name,amenity) %>%
   rename(.,Name=name,Type=amenity)
 
-################## Append both shapefiles and visualize web-scraped geodata
+################## Visualize web-scraped geodata (*)
 ################## Note areas in the middle with much lower provison (relative to population density)
 healthcare_resources_shp <- raster::bind(OSM_points_shp,gp_surgeries_shp)
 rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_small) #Clean up environment
@@ -245,7 +245,7 @@ leaflet(healthcare_resources_shp) %>%
 ################### PRODUCE NEW PREDICTORS ###################
 ##############################################################
 
-##################  Test the user-written function for first 5 postcodes among survey responses
+##################  Test the user-written function for first 5 postcodes among survey responses (*)
 loop.support.one <- 1:5
 Survey_postcodes_shp <- spTransform(Survey_postcodes_shp, CRS(ukgrid))
 healthcare_resources_shp <- spTransform(healthcare_resources_shp, CRS(ukgrid))
@@ -254,10 +254,10 @@ survey.predictors.wales <- pbmclapply(loop.support.one,number.within.buffer,
                                       interestpoints.spdf=healthcare_resources_shp) %>% data.table::rbindlist(.)
 survey.predictors.wales
 
-##################  Applying can take up to 30min, so let's import the ready-made results instead
+##################  Applying can take up to 30min, so let's import the ready-made results instead (*)
 survey.predictors.wales <- fread("Welsh postcodes small 20km.csv",header=TRUE, sep=",", check.names=T)
 
-################## How is this new predictor distributed?
+################## How is this new predictor distributed? (*)
 ################## This confirms that, overall, access is good (median distance 700m)
 ################## but about 5% of postcodes are more than 6km away from a GP surgery
 round(median(survey.predictors.wales$dist.to.point*1000),1)
@@ -272,18 +272,19 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 ###################  REGRESSION MODELS TO ASSESS IMPACT #################
 #########################################################################
 
-##################  Age is associated with a higher likelihood of needing hospital
+##################  Age is associated with a higher likelihood of needing hospital (*)
 Model_1 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome,data=USoc, family=binomial)
 jtools::plot_summs(Model_1, scale = TRUE)
 cplot(Model_1, "age")
 
-##################  But after adjusting for health conditions, this is more likely related to health
+##################  But after adjusting for health conditions, this is more likely related to health (*)
 ##################  In fact, age is no longer a significant predictor and we see that those with pre-existing
 ##################  long-term conditions are still almost twice as likely to need inpatient care
 Model_2 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health,data=USoc, family=binomial)
 jtools::plot_summs(Model_2, scale = TRUE)
 
-##################  Plot margins for long-term health
+##################  In fact, according to model, those with health conditions are twice as likely (*)
+##################  to require hospital care
 new_data <- rbind(USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=1,.),
       USoc %>% select(.,age,male,leq_hhincome) %>% apply(.,2,mean) %>% t() %>% as.data.frame() %>% cbind(LT_health=0,.))
 predicted_data <- predict(Model_2, newdata = new_data, type="response")
@@ -294,11 +295,11 @@ vis_model2 <- cbind.data.frame(LT_health=new_data$LT_health,mean.likelihood=pred
   labs(fill = "Previous health condition") + xlab("Previous health condition") + ylab("%") + theme_minimal() + ggtitle("Predicted likelihood of needing hospital care")
 vis_model2
 
-################## Living in an urban area is not associated with more hospital stays
+################## Living in an urban area is not associated with more hospital stays (*)
 Model_3 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+urban,data=USoc, family=binomial)
 jtools::plot_summs(Model_3, scale = TRUE)
 
-################## Neither is living further away from a GP or hospital
+################## Neither is living further away from a GP or hospital (*)
 Model_4 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 jtools::plot_summs(Model_4, scale = TRUE)
 
@@ -306,14 +307,13 @@ jtools::plot_summs(Model_4, scale = TRUE)
 ############# ASSESSMENT OF PREDICTIVE MODEL ############
 #########################################################
 
-################## AUC (area under the curve) of model is 0.605
-################## Not a good model for predicting need for inpatient care - only slightly better than random prediction (AUC of 0.5)
+################## This model has poor predictive performance (AUC of 0.6) (*)
+################## Only slightly better than random prediction
 predict_model4 <- predict(Model_4, type="response")
 AUC <- pROC::roc(Model_4$data$inpatient_nexttyear,predict_model4)
 AUC
 
-################## Plot the ROC curve for a model: true positive rate vs. false positive rate
-################## And the optimal cut-off point for prediction using this model
+################## Also reflected in the ROC curve (*)
 ROCRpred_model4 <-  ROCR::prediction(predict_model4, Model_4$data$inpatient_nexttyear)
 ROCRperf_model4 <- performance(ROCRpred_model4, "tpr", "fpr")
 plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
