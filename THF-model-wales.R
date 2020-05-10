@@ -2,8 +2,8 @@
 ################### INTRODUCTION ####################
 #####################################################
 
-# For this assessment, not having access to real patient data, I was keen to talk you through a small piece of analysis that involves
-# survey data with health outcomes, but also linked to external variables - in this case geospatial data.
+# For this exercise, not having access to real patient data, I was keen to talk you through a small analysis
+# that involves survey data with health outcomes, but also linked to external sources of data
 
 # • A brief explanation of what problem you are trying to solve and the data you have used
 
@@ -15,51 +15,44 @@
 # According to Royal College of Nursing last year - Up to 10 million people in rural Britain live in 'healthcare deserts'.
 # If we move towards a digital health service, this could get even worse.
 # Are differences based on proximity already reflected in patterns of healthcare use?
-# I have restricted analysis to Wales because, through recent for the Welsh Government for a transport
+# I have restricted analysis to Wales because, through recent work for the Welsh Government for a transport
 # scheme, I have already processed data on service accessibility and I am familiar with the
 # survey data available for that region.
 
 # DATA:
-# Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
+# - Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
 # longitudinal survey in the UK (Funded by UK government, frequently used to conduct social research).
-# It has a questionnaire module on health and healthcare use.
-# Locations of GP surgeries in the UK - extracted from NHS Digital database.
-# Locations of hospitals in the UK - web-scraped from Open Street Maps using Overpass Turbo.
+# It has a module on health and healthcare use.
+# - Locations of GP surgeries- from NHS Digital database.
+# - Locations of hospitals - web-scraped from Open Street Maps using Overpass Turbo.
 
 # • The approach you have taken to solving the problem
 
 # METHODOLOGY:
-# Merged survey data with external variables, that I built using web-scraped geodata.
-# Survey data: create new outcome in wave 8 based on wave 9 information: 
-# 'will require inpatient care in the next 12 months'. End up with a cross-section, but with info on future.
-# Data imputation: household location is not available in the public version of Understanding Society.
+# - Survey data: create new outcome in wave 8: 'will require inpatient care in the next 12 months'.
+# End up with a cross-section, but with info on future.
+# - Data imputation: household location is not available in the public version of Understanding Society.
 # For the sake of this exercise, I resort to second-best solution: impute postcodes at random
 # based on whether repondents live in a rural or urban area (e.g. if you live in urban area in Wales,
 # you may get assigned a Cardiff or Swansea postcode).
-# GIS analysis (geographic information systems): How did I create the new predictor?
-# I wrote a function that summarizes for each postcode: how close your nearest GP surgery/hospital is,
-# and how many can be found within a distance buffer from where you live.
+# - GIS analysis (geographic information systems): How did I create the new predictor?
+# I wrote a function that summarizes for each postcode: how close your nearest GP surgery/hospital is.
 # This new predictor is merged back into the survey responses based on the imputed postcode.
-# I used logistic regressions to assess the impact of those factors on the likelihood of accessing
+# - Models: I used logistic regressions to assess the impact of those factors on the likelihood of accessing
 # inpatient care and I assess the marginal impact of those factors on the likelihood.
-# Finally, I assess the performance of those prediction models with ROC curves.
 
 ##############################################
 ################### SETUP ####################
 ##############################################
 
 ################## Load packages
-
 if (!require("pacman")) install.packages("pacman")
-
 pacman::p_load(dplyr,stringr,sp,ggplot2,plyr,gmodels,Rmisc,DescTools,data.table,Hmisc,tibble,rgdal,leaflet,rgeos,raster,plotly,pbapply,pbmcapply,skimr,ROCR,pROC,margins,jtools)
 
 ################## Clean up the global environment
-
 rm(list = ls())
 
 ################## Set directory
-
 setwd(str_replace_all(path.expand("~"), "Documents", ""))
 setwd("Documents/GitHub/THF-model-wales/Files/")
 
@@ -67,7 +60,7 @@ setwd("Documents/GitHub/THF-model-wales/Files/")
 ################### PRE-LOAD USER-WRITTEN FUNCTIONS ####################
 ########################################################################
 
-################## Function to produce 'distance to GP surgery' predictor
+################## Function to produce 'distance to GP surgery' predictor based on place of residence
 number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.spdf){
   
   aux.refpoint <- adminpoints.spdf[k,] #Isolate the admin-area-center
@@ -142,11 +135,7 @@ number.within.buffer <- function(k,distpar_km,adminpoints.spdf,interestpoints.sp
     
   }
   
-  return(end.mat)
-}
-
-#This function will, for each reference point (e.g.post code), compute the number of items
-#(e.g. GP surgery) within a given buffer and find the nearest item
+  return(end.mat)}
 
 ################## Projection codes
 ukgrid = "+init=epsg:27700"
@@ -157,7 +146,6 @@ latlong="+init=epsg:4326"
 ###################################################
 
 ################## Import dataset
-
 USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.names=T) %>% 
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
@@ -198,22 +186,21 @@ USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*1
 ################### LOOKUP TABLES FOR GEOGRAPHIES ###################
 #####################################################################
 
-################## Import directory of postcodes in the UK, Wales
+################## Import directory of postcodes in the Wales
 Wales_postcodes_small <- fread("Welsh postcodes small.csv",header=TRUE, sep=",", check.names=T)
 
-################## Sample urban postcodes for USoc dataset (with replacement)
+################## Randomly select postcodes (with replacement) to merge into survey data
+################## Separately for urban and rural respondents
 USoc_urban <- filter(USoc,urban==1) %>% select(.,pidp)
 urban_postcodes <- filter(Wales_postcodes_small,urban==1)
 samples_postcodes_urban_idx <- sample(1:nrow(urban_postcodes),nrow(USoc_urban), replace = TRUE, prob = NULL)
 USoc_imputed_pcode_urban <- urban_postcodes[samples_postcodes_urban_idx,] %>% select(.,pcode) %>% cbind.data.frame(.,USoc_urban)
 
-################## Sample rural postcodes for USoc dataset (with replacement)
 USoc_rural <- filter(USoc,urban==0) %>% select(.,pidp)
 rural_postcodes <- filter(Wales_postcodes_small,urban==0)
 samples_postcodes_rural_idx <- sample(1:nrow(rural_postcodes),nrow(USoc_rural), replace = TRUE, prob = NULL)
 USoc_imputed_pcode_rural <- urban_postcodes[samples_postcodes_rural_idx,] %>% select(.,pcode) %>% cbind.data.frame(.,USoc_rural)
 
-################## Dataset of imputed postcodes
 imputed_postcodes <- rbind(USoc_imputed_pcode_urban,USoc_imputed_pcode_rural) %>% as.data.table()
 
 ################## Merge imputed postcodes back into dataset
@@ -233,7 +220,6 @@ leaflet(Survey_postcodes_shp) %>%
 ############################################################################
 
 ################## Import GP surgery locations (NHS Digital)
-
 gp_surgeries <- fread("epraccur-clean.csv", header = T, sep = ',', data.table = T)
 
 gp_surgeries_shp <- SpatialPointsDataFrame(cbind(gp_surgeries$long,gp_surgeries$lat),
@@ -241,21 +227,15 @@ gp_surgeries_shp <- SpatialPointsDataFrame(cbind(gp_surgeries$long,gp_surgeries$
                                           proj4string = CRS(latlong))
 
 ################## Import hospital locations (Open Street Maps)
-
-#Import data on Hospitals web-scraped from OpenStreetMaps (an open-source Google Maps)
-
 OSM_points_shp <- readOGR("hospitals.geojson", "hospitals", require_geomType="wkbPoint") #Import shapefile
 OSM_points_shp <- spTransform(OSM_points_shp, CRS(latlong)) #Set to the same projection
 OSM_points_shp@data <- select(OSM_points_shp@data,name,amenity) %>%
   rename(.,Name=name,Type=amenity)
 
-################## Merge geospatial data from NHS and OpenStreetMaps a single shapefile
-
+################## Append both shapefiles and visualize web-scraped geodata
+################## Note areas in the middle with much lower provison (relative to population density)
 healthcare_resources_shp <- raster::bind(OSM_points_shp,gp_surgeries_shp)
 rm(OSM_points_shp,gp_surgeries_shp,gp_surgeries,Wales_postcodes_small) #Clean up environment
-
-################## Visualize the web-scraped geodata
-################## Note areas in the middle with much lower provison (relative to population density)
 
 palher <- colorFactor(palette=c("#e7298a","#e6ab02"), levels = c("GP","hospital"))
 leaflet(healthcare_resources_shp) %>%
@@ -268,7 +248,6 @@ leaflet(healthcare_resources_shp) %>%
 ######################################################################
 
 ##################  Test the function for first 5 postcodes among survey responses
-
 loop.support.one <- 1:5
 Survey_postcodes_shp <- spTransform(Survey_postcodes_shp, CRS(ukgrid))
 healthcare_resources_shp <- spTransform(healthcare_resources_shp, CRS(ukgrid))
@@ -278,20 +257,17 @@ survey.predictors.wales <- pbmclapply(loop.support.one,number.within.buffer,
 survey.predictors.wales
 
 ##################  Applying can take up to 30min, so let's import the ready-made results instead
-
 survey.predictors.wales <- fread("Welsh postcodes small 20km.csv",header=TRUE, sep=",", check.names=T)
 
 ################## How is this new predictor distributed?
 ################## This confirms that, overall, access is good (median distance 700m)
 ################## but about 5% of postcodes are more than 6km away from a GP surgery
-
 round(median(survey.predictors.wales$dist.to.point*1000),1)
 ggplot(survey.predictors.wales, aes(dist.to.point, fill = cut(dist.to.point, 100))) +
   geom_histogram(show.legend = FALSE) + theme_minimal() + labs(x = "Km to nearest GP/hospital", y = "n") +
   ggtitle("Histogram") + scale_fill_discrete(h = c(240, 10), c = 120, l = 70)
 
 ################## Merge new predictor into the survey based on the imputed postcodes
-
 USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 
 #########################################################################
