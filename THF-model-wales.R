@@ -150,11 +150,10 @@ USoc <- fread("Understanding-Society-Wave8.csv", header=TRUE, sep=",", check.nam
           filter(.,gor_dv=="[10] wales") %>% as_tibble()
 skim(USoc)
 
-##################  10% of sample required inpatient treatment the year after being surveyed
-round(mean(USoc$inpatient_nexttyear)*100,0)
+##################  10% of sample needed hospital care the year after being surveyed
+round(mean(USoc$inpatient_nexttyear)*100,1)
 
-##################  The median age of those who went to hospital was 6 years higher
-##################  Another peak in 20's (in both men and women)
+##################  The median age of those who needed hospital care was 6 years higher
 mu_age <- ddply(USoc, "inpatient_nexttyear", summarise, age.median=median(age))
 USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inpatient_nexttyear))) +
   geom_density(alpha=0.5) + theme(panel.background = element_blank(),legend.position="bottom") + ggtitle("Distribution of age") +
@@ -163,7 +162,7 @@ USoc %>% ggplot(., aes(x=age, fill=factor(inpatient_nexttyear), color=factor(inp
 rm(mu_age)
 
 ##################  Those with a pre-existing long-term health condition had a 14% likelhood of
-##################  requiring inpatient care in the next 12m - compared to only 7% in those without one
+##################  needing hospital care - compared to only 7% in those without one
 USoc %>% ddply(., "LT_health", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=rate.inpatient, fill=factor(LT_health))) +
   geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient, y = rate.inpatient + 1), position=position_dodge(width=0.9)) +
@@ -171,7 +170,7 @@ USoc %>% ddply(., "LT_health", summarise, rate.inpatient=mean(inpatient_nexttyea
   theme(panel.background = element_blank(),legend.position="bottom")
 
 ##################  There is, at first sight, no relationship between living in an urban area
-##################  and being admitted to hospital
+##################  and needing hospital care
 USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(urban), y=rate.inpatient, fill=factor(urban))) +
   geom_bar(stat="identity") + geom_text(aes(label=rate.inpatient, y = rate.inpatient + 1), position=position_dodge(width=0.9)) +
@@ -186,10 +185,10 @@ USoc %>% ddply(., "urban", summarise, rate.inpatient=mean(inpatient_nexttyear)*1
 ################### LOOKUP TABLES FOR GEOGRAPHIES ###################
 #####################################################################
 
-################## Import directory of postcodes in the Wales
+################## Import directory of Welsh postcodes
 Wales_postcodes_small <- fread("Welsh postcodes small.csv",header=TRUE, sep=",", check.names=T)
 
-################## Randomly select postcodes (with replacement) to merge into survey data
+################## Randomly select postcodes to merge into the survey data
 ################## Separately for urban and rural respondents
 USoc_urban <- filter(USoc,urban==1) %>% select(.,pidp)
 urban_postcodes <- filter(Wales_postcodes_small,urban==1)
@@ -212,8 +211,7 @@ Survey_postcodes_shp <- SpatialPointsDataFrame(cbind(Wales_postcodes_small$long,
                                               data = Wales_postcodes_small,
                                               proj4string = CRS(latlong)) %>% subset(., pcode %in% USoc$pcode)
 
-leaflet(Survey_postcodes_shp) %>%
-  addProviderTiles(providers$Stamen.Terrain) %>% addCircleMarkers(data=Survey_postcodes_shp,fillColor = "blue",radius=5, fillOpacity = 0.5,stroke=T,col="#737373",weight = 1)
+leaflet(Survey_postcodes_shp) %>% addProviderTiles(providers$Stamen.Terrain) %>% addCircleMarkers(data=Survey_postcodes_shp,fillColor = "blue",radius=5, fillOpacity = 0.5,stroke=T,col="#737373",weight = 1)
 
 ############################################################################
 ################### IMPORT (WEB-SCRAPED) GEOSPATIAL DATA ###################
@@ -243,11 +241,11 @@ leaflet(healthcare_resources_shp) %>%
   addCircleMarkers(data=healthcare_resources_shp,fillColor = ~palher(Type),radius=5,
                    fillOpacity = 0.5,stroke=T,col="#737373",weight = 1) %>% addLegend("bottomright", col=c("#e7298a","#e6ab02"), title = 'Amenity', labels=c("GP","hospital"),opacity = 1) # legend title
 
-######################################################################
-################### PRODUCE NEW PREDICTORS IN DATA ###################
-######################################################################
+##############################################################
+################### PRODUCE NEW PREDICTORS ###################
+##############################################################
 
-##################  Test the function for first 5 postcodes among survey responses
+##################  Test the user-written function for first 5 postcodes among survey responses
 loop.support.one <- 1:5
 Survey_postcodes_shp <- spTransform(Survey_postcodes_shp, CRS(ukgrid))
 healthcare_resources_shp <- spTransform(healthcare_resources_shp, CRS(ukgrid))
@@ -274,7 +272,7 @@ USoc <- left_join(USoc,survey.predictors.wales,by="pcode")
 ###################  REGRESSION MODELS TO ASSESS IMPACT #################
 #########################################################################
 
-##################  Age is associated with a higher likelihood of a stay in hospital
+##################  Age is associated with a higher likelihood of needing hospital
 Model_1 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome,data=USoc, family=binomial)
 jtools::plot_summs(Model_1, scale = TRUE)
 cplot(Model_1, "age")
@@ -293,7 +291,7 @@ predicted_data <- predict(Model_2, newdata = new_data, type="response")
 vis_model2 <- cbind.data.frame(LT_health=new_data$LT_health,mean.likelihood=predicted_data*100) %>% round(.,1) %>%
   ggplot(., aes(x=factor(LT_health), y=mean.likelihood,
                 fill=factor(LT_health))) + geom_bar(stat="identity") + geom_text(aes(label=mean.likelihood), position=position_dodge(width=1)) + scale_fill_brewer(type="qual",labels = c("No", "Yes"),palette=4) +
-  labs(fill = "Previous health condition") + xlab("Previous health condition") + ylab("%") + theme_minimal() + ggtitle("Predicted likelihood of needing inpatient care")
+  labs(fill = "Previous health condition") + xlab("Previous health condition") + ylab("%") + theme_minimal() + ggtitle("Predicted likelihood of needing hospital care")
 vis_model2
 
 ################## Living in an urban area is not associated with more hospital stays
@@ -329,12 +327,9 @@ plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 # Analysis perspective:
 
 # Descriptive findings quite striking: suggests approx. 10% of Welsh population needed hospital care in 2017.
-# Also suprised by the high rate of people who consider themselves to have a long-term illness
-# (just under 50%, includes hypertension, asthma, mental health).
+# But just under 50% consider themselves to have a long-term health condition (includes hypertension, asthma, mental health).
 # I was pleasantly surprised that the distance to a surgery in Wales is quite short, although there are
 # exceptions - and a short linear distance doesn't always translate into a short journey time (no roads).
-# I was surprised to see that income didn't have a stronger impact on healthcare use
-# (although we do also adjust for health).
 
 # Coding perspective:
 
@@ -356,4 +351,3 @@ plot(ROCRperf_model4, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=
 # Prediction with small models is prone to over-fitting, so I would use methods for cross-validation.
 # Try a different model for whole UK and allow interactions to assess different impacts according to region.
 # Use R Notebook to present analysis.
-
