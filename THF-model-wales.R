@@ -14,16 +14,16 @@
 # WHY?:
 # According to Royal College of Nursing last year - Up to 10 million people in rural Britain live in 'healthcare deserts'.
 # If we move towards a digital health service, this could get even worse.
-# Are differences based on proximity already reflected in patterns of healthcare use?
+# Are there already differences in patterns of healthcare use based on proximity?
 # I have restricted analysis to Wales because, through recent work for the Welsh Government for a transport
 # scheme, I have already processed data on service accessibility and I am familiar with the
 # survey data available for that region.
 
 # DATA:
 # - Survey data from waves 8 and 9 of Understanding Society - the largest nationally-representative
-# longitudinal survey in the UK (Funded by UK government, frequently used to conduct social research).
+# longitudinal survey in the UK (Funded by UK government, frequently used to conduct research).
 # It has a module on health and healthcare use.
-# - Locations of GP surgeries- from NHS Digital database.
+# - Locations of GP surgeries - from NHS Digital database.
 # - Locations of hospitals - web-scraped from Open Street Maps using Overpass Turbo.
 
 # • The approach you have taken to solving the problem
@@ -39,7 +39,7 @@
 # I wrote a function that summarizes for each postcode: how close your nearest GP surgery/hospital is.
 # This new predictor is merged back into the survey responses based on the imputed postcode.
 # - Models: I used logistic regressions to assess the impact of those factors on the likelihood of accessing
-# inpatient care and I assess the marginal impact of those factors on the likelihood.
+# inpatient care and I assess the marginal impact of those factors.
 
 ##############################################
 ################### SETUP ####################
@@ -307,10 +307,10 @@ jtools::plot_summs(Model_3, scale = TRUE)
 Model_4 <-  glm(inpatient_nexttyear ~ age+male+leq_hhincome+LT_health+dist.to.point,data=USoc, family=binomial)
 jtools::plot_summs(Model_4, scale = TRUE)
 
-# #########################################################
-# ############# ASSESSMENT OF PREDICTIVE MODEL ############
-# #########################################################
-# 
+#########################################################
+############# ASSESSMENT OF PREDICTIVE MODEL ############
+#########################################################
+
 # ################## This model has poor predictive performance (AUC of 0.6)
 # ################## Only slightly better than random prediction
 # predict_model4 <- predict(Model_4, type="response")
@@ -349,9 +349,9 @@ jtools::plot_summs(Model_4, scale = TRUE)
 
 # In a real-world, setting I would request real household locations (otherwise just info from urban/rural
 # plus noise). This would also allow me to see whether my dataset does have the most remote
-# potentially vulnerable households
+# potentially vulnerable households.
 # Look at non-urgent/outpatient care where distance may be more of a factor in deciding to see a doctor.
 # Journey times by car/PT rather than as-the-crow-flies distance.
-# Prediction with small models is prone to over-fitting, so I would use methods for cross-validation.
+# Prediction with small samples is prone to over-fitting, so I would use methods for cross-validation.
 # Try a different model for whole UK and allow interactions to assess different impacts according to region.
 # Use R Notebook to present analysis.
