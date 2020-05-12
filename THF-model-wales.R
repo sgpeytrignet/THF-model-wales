@@ -2,7 +2,7 @@
 ################### INTRODUCTION ####################
 #####################################################
 
-# For this exercise, not having access to real patient data, I was keen to talk you through a small analysis
+# For this exercise, not having access to real patient or care data, I was keen to talk you through a small analysis
 # that involves survey data with health outcomes, but also linked to external sources of data
 
 # • A brief explanation of what problem you are trying to solve and the data you have used
